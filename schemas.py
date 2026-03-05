@@ -1,10 +1,12 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from datetime import date
-from word2number import w2n
-print(w2n.word_to_num('two hundred and fifty six'))
-class DeeRrecords(BaseModel):
+
+class DeedRecord(BaseModel):
+    """
+    A Pydantic model representing a deed record with the following fields:
+    """
     doc_id: str
-    county_raw: str  # We call it raw because it will hold "S. Clara"
+    county_raw: str
     state: str
     date_signed: date
     date_recorded: date
