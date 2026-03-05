@@ -1,0 +1,7 @@
+# Ignore the entire environment folder
+.venv/
+
+# Ignore Python cache and OS junk
+__pycache__/
+*.py[cod]
+.DS_Store
