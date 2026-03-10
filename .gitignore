@@ -1,6 +1,6 @@
 # Ignore the entire environment folder
 .venv/
-
+.env
 # Ignore Python cache and OS junk
 __pycache__/
 *.py[cod]
