@@ -1,40 +1,47 @@
 import os
-from openai import OpenAI
+from google import genai
+from dotenv import load_dotenv
 from schemas import DeedRecord
 
-# Make sure you have your OpenAI API key set in your environment variables!
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# 1. Load the secret API key from the .env file
+load_dotenv()
+
+# The client automatically looks for the GEMINI_API_KEY environment variable
+client = genai.Client()
 
 def extract_deed_data(file_path: str) -> DeedRecord:
     """
-    Reads the messy OCR text and uses an LLM to extract structured data.
+    Reads the messy OCR text and uses Gemini to extract structured data.
     """
     print(f"Reading messy OCR text from {file_path}...")
     
     with open(file_path, "r") as file:
         messy_text = file.read()
 
-    print("Asking LLM to extract data into our Pydantic schema...")
+    print("Asking Gemini to extract data into our Pydantic schema...")
     
-    # We use OpenAI's 'parse' method to force Structured Outputs
-    response = client.beta.chat.completions.parse(
-        model="gpt-4o-mini", # Fast, cheap, and perfect for extraction
-        messages=[
-            {"role": "system", "content": "You are a precise data extraction assistant. Extract the real estate deed information from the OCR text."},
-            {"role": "user", "content": messy_text}
+    # 2. Call the Gemini API with Structured Outputs
+    response = client.models.generate_content(
+        model="gemini-2.5-flash", # Fast, cost-effective, and excellent at extraction
+        contents=[
+            "You are a precise data extraction assistant. Extract the real estate deed information from the OCR text.",
+            messy_text
         ],
-        response_format=DeedRecord # THIS IS THE MAGIC LINE
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": DeedRecord,
+        }
     )
 
-    # The LLM returns a perfectly clean Pydantic object!
-    extracted_data = response.choices[0].message.parsed
+    # 3. The SDK automatically maps the response to our Pydantic class
+    extracted_data = response.parsed
     
     print(f"Extraction successful! Found County: {extracted_data.county_raw}")
     return extracted_data
 
 # --- QUICK TEST ---
 if __name__ == "__main__":
-    # Make sure you created 'ocr_input.txt' in Step 1!
+    # Make sure you created 'ocr_input.txt' from earlier!
     data = extract_deed_data("ocr_input.txt")
-    print("\n--- LLM Output ---")
+    print("\n--- Gemini Output ---")
     print(data.model_dump_json(indent=2))
